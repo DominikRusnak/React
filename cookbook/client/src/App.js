@@ -1,11 +1,10 @@
-import logo from './logo.svg';
 import './App.css';
 import Cookbook from "./bricks/Cookbook";
 import RecipeList from "./bricks/RecipeList";
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 const cookbooknovice = {
-  name: "Be a bad cook with me",
+  name: "Staňte sa zlým kuchárom so mnou",
 };
 
 const recipes = [
@@ -75,10 +74,10 @@ function App() {
   return (
     <div className="App">
       <div className="basicInfo"> 
-        <h1>Hi, this is me attempting a cookbook frontend.</h1>
-        <h6>I'm not a very good programmer.</h6>
+        <h1>Ahoj, pokúšam sa o frontend.</h1>
+        <h6>Nie som dobrý programátor.</h6>
         <progress id="taskCompletion" value="5" max="100">32%</progress>
-        <h6>Task failure progress</h6>
+        <h6>Postup zlyhania úlohy</h6>
       </div>
       <div>
         <Cookbook cookbook={cookbooknovice} />
