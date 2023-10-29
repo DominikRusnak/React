@@ -25,7 +25,7 @@ function RecipeList(props) {
           item.description.toLocaleLowerCase().includes(searchBy.toLocaleLowerCase())
         );
       });
-    }, [searchBy]);
+    }, [searchBy, props.recipeList]);
   
     function handleSearch(event) {
       event.preventDefault();
@@ -37,6 +37,9 @@ function RecipeList(props) {
     }
 
     return (
+      console.log("recipelistingredients"),
+      console.log(props.ingredients),
+      console.log("recipelistingredientsENDENDEND"),
         <div>
           <Navbar bg="light">
             <div className="container-fluid">
@@ -76,14 +79,16 @@ function RecipeList(props) {
             </div>
           </Navbar>
           {isGrid ? (
-            <RecipeDetailedList recipeList={filteredRecipeList} />
+            <RecipeDetailedList recipeList={filteredRecipeList} ingredients={props.ingredients} />
           ) : isTable ? (
-            <RecipeTableList recipeList={filteredRecipeList} />
+            <RecipeTableList recipeList={filteredRecipeList} ingredients={props.ingredients} />
           ) : (
-            <RecipeSimpleList recipeList={filteredRecipeList} />
+            <RecipeSimpleList recipeList={filteredRecipeList} ingredients={props.ingredients} />
           )}
         </div>
+        
       );
+
 }
 
 export default RecipeList;

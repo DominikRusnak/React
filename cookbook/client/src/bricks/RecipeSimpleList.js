@@ -3,7 +3,7 @@ import Recipe from "./Recipe";
 
 function RecipeSimpleList(props) {
     return props.recipeList.map((recipe) => {
-        return <Recipe key={recipe.id} recipe={recipe} simple="true" />;
+        return <Recipe key={recipe.id} recipe={recipe} simple="true" ingredients={props.ingredients} />;
     });
 }
 
