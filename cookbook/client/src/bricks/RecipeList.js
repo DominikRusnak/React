@@ -41,9 +41,11 @@ function RecipeList(props) {
       console.log(props.ingredients),
       console.log("recipelistingredientsENDENDEND"),
         <div>
-          <Navbar bg="light">
+          <Navbar collapseOnSelect expand="sm" bg="light">
             <div className="container-fluid">
               <Navbar.Brand>Seznam receptů</Navbar.Brand>
+              <Navbar.Toggle aria-controls="responsive-navbar-nav" />
+              <Navbar.Collapse style={{ justifyContent: "right" }}>
               <div>
                 <Form className="d-flex" onSubmit={handleSearch}>
                     <Form.Control
@@ -61,7 +63,8 @@ function RecipeList(props) {
                     >
                         <Icon size={1} path={mdiMagnify} />
                     </Button>
-                    <Button 
+                    <Button
+                        className={"d-none d-md-block"} 
                         variant="outline-primary"
                         onClick={() =>
                         setViewType((currentState) => {
@@ -76,15 +79,23 @@ function RecipeList(props) {
                     </Button>
                 </Form>
               </div>
+              </Navbar.Collapse>
             </div>
           </Navbar>
-          {isGrid ? (
-            <RecipeDetailedList recipeList={filteredRecipeList} ingredients={props.ingredients} />
-          ) : isTable ? (
-            <RecipeTableList recipeList={filteredRecipeList} ingredients={props.ingredients} />
-          ) : (
-            <RecipeSimpleList recipeList={filteredRecipeList} ingredients={props.ingredients} />
-          )}
+          <div class="container">
+            <div className={"d-block d-md-none"}>
+              <RecipeSimpleList recipeList={filteredRecipeList} ingredients={props.ingredients} />
+            </div>
+            <div className={"d-none d-md-block"}>
+              {isGrid ? (
+                <RecipeDetailedList recipeList={filteredRecipeList} ingredients={props.ingredients} />
+              ) : isTable ? (
+                <RecipeTableList recipeList={filteredRecipeList} ingredients={props.ingredients} />
+              ) : (
+                <RecipeSimpleList recipeList={filteredRecipeList} ingredients={props.ingredients} />
+              )}
+            </div>
+          </div>
         </div>
         
       );
