@@ -2,19 +2,23 @@ import React, { useState, useMemo } from "react";
 import RecipeTableList from "./RecipeTableList";
 import RecipeSimpleList from "./RecipeSimpleList";
 import RecipeDetailedList from "./RecipeDetailedList";
+import RecipeForm from "./RecipeForm";
 
 import Navbar from "react-bootstrap/Navbar";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
 
 import Icon from "@mdi/react";
-import { mdiTable, mdiViewGridOutline, mdiViewGridCompact, mdiMagnify } from "@mdi/js";
+import { mdiTable, mdiViewGridOutline, mdiViewGridCompact, mdiMagnify, mdiPlus } from "@mdi/js";
 
 function RecipeList(props) {
     const [viewType, setViewType] = useState("grid");
     const isGrid = viewType === "grid";
     const isTable = viewType === "table";
     const [searchBy, setSearchBy] = useState("");
+    const [addRecipeShow, setAddRecipeShow] = useState(false);
+  
+    const handleAddRecipeShow = () => setAddRecipeShow(true);
 
     const filteredRecipeList = useMemo(() => {
       return props.recipeList.filter((item) => {
@@ -77,6 +81,9 @@ function RecipeList(props) {
                         <Icon size={1} path={isGrid ? mdiTable : isTable ? mdiViewGridCompact : mdiViewGridOutline} />{" "}
                         {isGrid ? "Tabulka" : isTable ? "Jednoduchý Grid" : "Grid"}
                     </Button>
+                    <RecipeForm
+                      ingredients={props.ingredients}
+                    />
                 </Form>
               </div>
               </Navbar.Collapse>
