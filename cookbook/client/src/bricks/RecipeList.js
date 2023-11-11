@@ -9,16 +9,26 @@ import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
 
 import Icon from "@mdi/react";
-import { mdiTable, mdiViewGridOutline, mdiViewGridCompact, mdiMagnify, mdiPlus } from "@mdi/js";
+import { mdiTable, mdiViewGridOutline, mdiViewGridCompact, mdiMagnify } from "@mdi/js";
 
 function RecipeList(props) {
     const [viewType, setViewType] = useState("grid");
     const isGrid = viewType === "grid";
     const isTable = viewType === "table";
     const [searchBy, setSearchBy] = useState("");
-    const [addRecipeShow, setAddRecipeShow] = useState(false);
-  
-    const handleAddRecipeShow = () => setAddRecipeShow(true);
+    const [recipeListCall, setRecipeListCall] =
+    useState({
+      state: "pending",
+    });
+
+    const handleRecipeAdded = (grade) => {
+      if (recipeListCall.state === "success") {
+        setRecipeListCall({
+          state: "success",
+          data: [...recipeListCall.data, grade]
+        });
+      }
+    }
 
     const filteredRecipeList = useMemo(() => {
       return props.recipeList.filter((item) => {
@@ -41,9 +51,6 @@ function RecipeList(props) {
     }
 
     return (
-      console.log("recipelistingredients"),
-      console.log(props.ingredients),
-      console.log("recipelistingredientsENDENDEND"),
         <div>
           <Navbar collapseOnSelect expand="sm" bg="light">
             <div className="container-fluid">
@@ -83,6 +90,7 @@ function RecipeList(props) {
                     </Button>
                     <RecipeForm
                       ingredients={props.ingredients}
+                      onComplete={(recipe) => handleRecipeAdded(recipe)}
                     />
                 </Form>
               </div>

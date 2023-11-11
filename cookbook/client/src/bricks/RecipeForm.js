@@ -1,21 +1,23 @@
 import Icon from "@mdi/react";
 import Button from "react-bootstrap/Button";
-import { Modal } from 'react-bootstrap';
+import { Modal, Image } from 'react-bootstrap';
 import { useState } from 'react'
-import { mdiPlus } from '@mdi/js'
+import { mdiPlus, mdiLoading } from '@mdi/js'
 import Form from "react-bootstrap/Form";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 
-function RecipeForm({ ingredients }) {
+function RecipeForm({ ingredients, onComplete }) {
     const [isModalShown, setShow] = useState(false);
   
-    const handleShowModal = () => setShow(true);
-    const handleCloseModal = () => setShow(false);
-
-    const [formData, setFormData] = useState({
+    const defaultForm = {
         name: "",
-        procedure: "",
+        description: "",
+        imgUri: "",
+        ingredients: [],
+    }
+
+    const defaultIngredients = {
         ingredient_1: {
             ingredientId: "",
             ingredientAmount: 0,
@@ -36,8 +38,20 @@ function RecipeForm({ ingredients }) {
             ingredientAmount: 0,
             ingredientUnit: "",
         },
+    }
 
-    });
+    const handleShowModal = () => setShow(true);
+    const handleCloseModal = () => {
+        setFormData(defaultForm);
+        setShow(false);
+    };
+
+    const [validated, setValidated] = useState(false); 
+    const [formData, setFormData] = useState(defaultForm);
+    const [formIngredients, setFormIngredients] = useState(defaultIngredients)
+    const [recipeAddCall, setRecipeAddCall] = useState({ 
+        state: 'inactive' 
+      });
 
     const setField = (name, val) => {
         return setFormData((formData) => {
@@ -48,8 +62,8 @@ function RecipeForm({ ingredients }) {
     };
 
     const setIngredientId = (name, val) => {
-        return setFormData((formData) => {
-            const newData = { ...formData };
+        return setFormIngredients((formIngredients) => {
+            const newData = { ...formIngredients };
             const ingredientInfo = newData[name];
             ingredientInfo.ingredientId = val;
             return newData;
@@ -57,8 +71,8 @@ function RecipeForm({ ingredients }) {
     };
 
     const setIngredientAmount = (name, val) => {
-        return setFormData((formData) => {
-            const newData = { ...formData };
+        return setFormIngredients((formIngredients) => {
+            const newData = { ...formIngredients };
             const ingredientInfo = newData[name];
             ingredientInfo.ingredientAmount = val;
             return newData;
@@ -66,8 +80,8 @@ function RecipeForm({ ingredients }) {
     };
 
     const setIngredientUnit = (name, val) => {
-        return setFormData((formData) => {
-            const newData = { ...formData };
+        return setFormIngredients((formIngredients) => {
+            const newData = { ...formIngredients };
             const ingredientInfo = newData[name];
             ingredientInfo.ingredientUnit = val;
             return newData;
@@ -75,20 +89,53 @@ function RecipeForm({ ingredients }) {
     };
     
     const handleSubmit = async (e) => {
+        const form = e.currentTarget; 
+
         e.preventDefault();
         e.stopPropagation();
     
         const payload = {
           ...formData,
         };
+
+
+
+        if (!form.checkValidity()) { 
+            setValidated(true); 
+            return; 
+        } 
+
+        payload.ingredients.push({id: formIngredients.ingredient_1.ingredientId, amount: formIngredients.ingredient_1.ingredientAmount, unit: formIngredients.ingredient_1.ingredientUnit});
+        payload.ingredients.push({id: formIngredients.ingredient_2.ingredientId, amount: formIngredients.ingredient_2.ingredientAmount, unit: formIngredients.ingredient_2.ingredientUnit});
+        payload.ingredients.push({id: formIngredients.ingredient_3.ingredientId, amount: formIngredients.ingredient_3.ingredientAmount, unit: formIngredients.ingredient_3.ingredientUnit});
+        payload.ingredients.push({id: formIngredients.ingredient_4.ingredientId, amount: formIngredients.ingredient_4.ingredientAmount, unit: formIngredients.ingredient_4.ingredientUnit});
+
     
-        console.log(payload);
+        setRecipeAddCall({ state: 'pending' });
+        const res = await fetch(`http://localhost:3000/recipe/create`, {
+            method: "POST",
+            headers: {
+            "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (res.status >= 400) {
+            setRecipeAddCall({ state: "error", error: data });
+        } else {
+            setRecipeAddCall({ state: "success", data });
+            if (typeof onComplete === 'function') {
+                onComplete(data);
+            }
+            handleCloseModal();
+        }
     };
     
     return (
       <>
         <Modal show={isModalShown} onHide={handleCloseModal}>
-            <Form onSubmit={(e) => handleSubmit(e)}>
+            <Form noValidate validated={validated} onSubmit={(e) => handleSubmit(e)}>
                 <Modal.Header closeButton>
                     <Modal.Title>Přidat recept</Modal.Title>
                 </Modal.Header>
@@ -99,20 +146,41 @@ function RecipeForm({ ingredients }) {
                         type="text"
                         value={formData.name}
                         onChange={(e) => setField("name", e.target.value)}
+                        maxLength={50}
                         required
                     />
+                    <Form.Control.Feedback type="invalid"> 
+                        Zadejte název s maximální délkou 50 znaků
+                    </Form.Control.Feedback> 
                 </Form.Group>
 
                 <Form.Group className="mb-3">
                     <Form.Label>Postup</Form.Label>
-                    <div>
+                    
                     <Form.Control
                         as="textarea" rows={6}
-                        value={formData.procedure}
-                        onChange={(e) => setField("procedure", e.target.value)}
+                        value={formData.description}
+                        onChange={(e) => setField("description", e.target.value)}
+                        maxLength={10000}
                         required
                         className="mb-3"
-                    /></div>
+                    />
+                    <Form.Control.Feedback type="invalid"> 
+                        Zadej postup, který nebude delší, než 10 000 znaků
+                    </Form.Control.Feedback> 
+                </Form.Group>
+                <Form.Group className="mb-3">
+                    <Form.Label>Obrázek</Form.Label>
+                    <Form.Control
+                        type="text"
+                        value={formData.imgUri}
+                        onChange={(e) => setField("imgUri", e.target.value)}
+                    />
+                    {formData.imgUri && <Image className="img-fluid rounded mx-auto d-block m-3" alt={formData.name}
+                                            src={formData.imgUri}/>}
+                    <Form.Control.Feedback type="invalid">
+                    Zadej obrázek pomocí URL
+                    </Form.Control.Feedback>
                 </Form.Group>
                 
                 <Row>
@@ -125,7 +193,7 @@ function RecipeForm({ ingredients }) {
                                 required
                             >
                                 
-                            <option defaultValue>Zvol ingredienci</option>
+                            <option>Zvol ingredienci</option>
                             {ingredients.map((ingredient) => (
                                 <option key={ingredient.id} value={ingredient.id}>{ingredient.name}</option>
                             ))}
@@ -134,20 +202,25 @@ function RecipeForm({ ingredients }) {
                     <Form.Group as={Col} className="mb-3">
                         <Form.Label>Počet</Form.Label>
                         <Form.Control
-                            type="text"
-                            value={formData.ingredient_1.ingredientAmount}
-                            onChange={(e) => setIngredientAmount("ingredient_1", e.target.value)}
+                            value={formIngredients.ingredient_1.ingredientAmount}
+                            onChange={(e) => setIngredientAmount("ingredient_1", parseFloat(e.target.value))}
                             required
                         />
+                        <Form.Control.Feedback type="invalid"> 
+                            Zadej množství/hmotnost
+                        </Form.Control.Feedback> 
                     </Form.Group>
                     <Form.Group as={Col} className="mb-3">
                         <Form.Label>Jednotka</Form.Label>
                         <Form.Control
                             type="text"
-                            value={formData.ingredient_1.ingredientUnit}
+                            value={formIngredients.ingredient_1.ingredientUnit}
                             onChange={(e) => setIngredientUnit("ingredient_1", e.target.value)}
                             required
                         />
+                        <Form.Control.Feedback type="invalid"> 
+                            Zadej jednotku
+                        </Form.Control.Feedback> 
                     </Form.Group>
                 </Row>
                 <Row>
@@ -170,19 +243,25 @@ function RecipeForm({ ingredients }) {
                         <Form.Label>Počet</Form.Label>
                         <Form.Control
                             type="text"
-                            value={formData.ingredient_2.ingredientAmount}
-                            onChange={(e) => setIngredientAmount("ingredient_2", e.target.value)}
+                            value={formIngredients.ingredient_2.ingredientAmount}
+                            onChange={(e) => setIngredientAmount("ingredient_2", parseFloat(e.target.value))}
                             required
                         />
+                        <Form.Control.Feedback type="invalid"> 
+                            Zadej množství/hmotnost
+                        </Form.Control.Feedback> 
                     </Form.Group>
                     <Form.Group as={Col} className="mb-3">
                         <Form.Label>Jednotka</Form.Label>
                         <Form.Control
                             type="text"
-                            value={formData.ingredient_2.ingredientUnit}
+                            value={formIngredients.ingredient_2.ingredientUnit}
                             onChange={(e) => setIngredientUnit("ingredient_2", e.target.value)}
                             required
                         />
+                        <Form.Control.Feedback type="invalid"> 
+                            Zadej jednotku
+                        </Form.Control.Feedback> 
                     </Form.Group>
                 </Row>
                 <Row>
@@ -205,19 +284,25 @@ function RecipeForm({ ingredients }) {
                         <Form.Label>Počet</Form.Label>
                         <Form.Control
                             type="text"
-                            value={formData.ingredient_3.ingredientAmount}
-                            onChange={(e) => setIngredientAmount("ingredient_3", e.target.value)}
+                            value={formIngredients.ingredient_3.ingredientAmount}
+                            onChange={(e) => setIngredientAmount("ingredient_3", parseFloat(e.target.value))}
                             required
                         />
+                        <Form.Control.Feedback type="invalid"> 
+                            Zadej množství/hmotnost
+                        </Form.Control.Feedback> 
                     </Form.Group>
                     <Form.Group as={Col} className="mb-3">
                         <Form.Label>Jednotka</Form.Label>
                         <Form.Control
                             type="text"
-                            value={formData.ingredient_3.ingredientUnit}
+                            value={formIngredients.ingredient_3.ingredientUnit}
                             onChange={(e) => setIngredientUnit("ingredient_3", e.target.value)}
                             required
                         />
+                        <Form.Control.Feedback type="invalid"> 
+                            Zadej jednotku
+                        </Form.Control.Feedback> 
                     </Form.Group>
                 </Row>
                 <Row>
@@ -240,30 +325,45 @@ function RecipeForm({ ingredients }) {
                         <Form.Label>Počet</Form.Label>
                         <Form.Control
                             type="text"
-                            value={formData.ingredient_4.ingredientAmount}
-                            onChange={(e) => setIngredientAmount("ingredient_4", e.target.value)}
+                            value={formIngredients.ingredient_4.ingredientAmount}
+                            onChange={(e) => setIngredientAmount("ingredient_4", parseFloat(e.target.value))}
                             required
                         />
+                        <Form.Control.Feedback type="invalid"> 
+                            Zadej množství/hmotnost
+                        </Form.Control.Feedback> 
                     </Form.Group>
                     <Form.Group as={Col} className="mb-3">
                         <Form.Label>Jednotka</Form.Label>
                         <Form.Control
                             type="text"
-                            value={formData.ingredient_4.ingredientUnit}
+                            value={formIngredients.ingredient_4.ingredientUnit}
                             onChange={(e) => setIngredientUnit("ingredient_4", e.target.value)}
                             required
                         />
+                        <Form.Control.Feedback type="invalid"> 
+                            Zadej jednotku
+                        </Form.Control.Feedback> 
                     </Form.Group>
                 </Row>
 
                 </Modal.Body>
                 <Modal.Footer>
                     <div className="d-flex flex-row gap-2">
+                        <div>
+                            { recipeAddCall.state === 'error' && 
+                                <div className="text-danger">Error: {recipeAddCall.error.errorMessage}</div> 
+                            }
+                        </div>
                         <Button variant="secondary" onClick={handleCloseModal}>
                             Zavřít
                         </Button>
-                        <Button variant="primary" type="submit">
-                            Vytvořit
+                        <Button variant="primary" type="submit" disabled={recipeAddCall.state === 'pending'}>
+                            { recipeAddCall.state === 'pending' ? (
+                                <Icon size={0.8} path={mdiLoading} spin={true} />
+                                ) : (
+                                "Vytvořit"
+                            )}
                         </Button>
                     </div>                
                 </Modal.Footer>
@@ -281,5 +381,5 @@ function RecipeForm({ ingredients }) {
       </>
     )
   }
-  
+
   export default RecipeForm;

@@ -12,9 +12,6 @@ function Recipe(props) {
     }
 
     function getIngredients() {
-        console.log("Start IngredientList")
-        console.log(props.ingredientList)
-        console.log("End IngredientList")
         if (isSimple) {
             return (
                 props.recipe.ingredients.slice(0, 4).map((ingredient) => (
