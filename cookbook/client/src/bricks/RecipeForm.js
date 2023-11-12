@@ -1,13 +1,15 @@
 import Icon from "@mdi/react";
 import Button from "react-bootstrap/Button";
 import { Modal, Image } from 'react-bootstrap';
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useContext } from 'react'
 import { mdiPlus, mdiLoading } from '@mdi/js'
 import Form from "react-bootstrap/Form";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
+import UserContext from './../UserProvider';
 
 function RecipeForm({ ingredients, show, recipe, setAddRecipeShow, onComplete }) {
+    const {isAuthorized} = useContext(UserContext);
 
     const [hasData, setData] = useState(false);
     const handleSetData = () => setData(true);
@@ -51,7 +53,6 @@ function RecipeForm({ ingredients, show, recipe, setAddRecipeShow, onComplete })
           });
           handleSetData()
         }
-        console.log(recipe);
       }, [recipe]);
 
     const handleShowModal = () => setAddRecipeShow({state: true});
@@ -387,15 +388,17 @@ function RecipeForm({ ingredients, show, recipe, setAddRecipeShow, onComplete })
                 </Modal.Footer>
             </Form>
         </Modal>
-        <Button
-            style={{ float: 'right' }}
-            variant="primary"
-            class="btn btn-success btn-sm"
-            onClick={handleShowModal}
-        >
-        <Icon path={mdiPlus} size={1} />
-            Přidat recept
-        </Button>
+        {isAuthorized &&
+            <Button
+                style={{ float: 'right' }}
+                variant="primary"
+                class="btn btn-success btn-sm"
+                onClick={handleShowModal}
+            >
+            <Icon path={mdiPlus} size={1} />
+                Přidat recept
+            </Button>
+        }
       </>
     )
   }

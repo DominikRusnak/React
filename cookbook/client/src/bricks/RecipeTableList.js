@@ -1,10 +1,12 @@
-import React from "react";
+import React, { useContext } from "react";
 import Table from "react-bootstrap/Table";
 import Icon from "@mdi/react";
 import { mdiPencilOutline } from '@mdi/js'
+import UserContext from './../UserProvider';
 
 
 function RecipeTableList(props) {
+  const {isAuthorized} = useContext(UserContext);
   return (
     <Table>
       <thead>
@@ -19,13 +21,15 @@ function RecipeTableList(props) {
             <tr key={recipe.id}>
               <td>{recipe.name}</td>
               <td>{recipe.description}</td>
-              <td> 
-                <Icon 
-                    size={1} 
-                    path={mdiPencilOutline} 
-                    style={{ color: 'green', cursor: 'pointer' }} 
-                    onClick={() => props.handleAddRecipeShow(recipe)} 
-                /> 
+              <td>
+                { isAuthorized && 
+                  <Icon 
+                      size={1} 
+                      path={mdiPencilOutline} 
+                      style={{ color: 'green', cursor: 'pointer' }} 
+                      onClick={() => props.handleAddRecipeShow(recipe)} 
+                  />
+                }
               </td> 
             </tr>
           );

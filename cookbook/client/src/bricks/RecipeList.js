@@ -61,7 +61,6 @@ function RecipeList(props) {
       if (!event.target.value) setSearchBy("");
     }
 
-    console.log(handleAddRecipeShow)
     return (
         <div>
           <Navbar collapseOnSelect expand="sm" bg="light">

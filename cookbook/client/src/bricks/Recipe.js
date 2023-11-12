@@ -1,10 +1,12 @@
-import React from "react";
+import React, { useContext } from "react";
 import Card from 'react-bootstrap/Card';
 import Icon from "@mdi/react";
-import { mdiPencilOutline } from '@mdi/js'
+import { mdiPencilOutline } from '@mdi/js';
+import UserContext from './../UserProvider';
 
 
 function Recipe(props) {
+    const {isAuthorized} = useContext(UserContext);
     const isSimple = props.simple === "true";
     
     function cutString() {
@@ -39,13 +41,15 @@ function Recipe(props) {
             <div>
                 <Card.Img variant="top" src={props.recipe.imgUri}  />
             </div>
-            <td> 
-                <Icon 
-                    size={1} 
-                    path={mdiPencilOutline} 
-                    style={{ color: 'green', cursor: 'pointer' }} 
-                    onClick={() => props.handleAddRecipeShow(props.recipe)} 
-                /> 
+            <td>
+                {isAuthorized && 
+                    <Icon 
+                        size={1} 
+                        path={mdiPencilOutline} 
+                        style={{ color: 'green', cursor: 'pointer' }} 
+                        onClick={() => props.handleAddRecipeShow(props.recipe)} 
+                    /> 
+                }
             </td> 
             <Card.Body>
                 <Card.Title style={{ textAlign: "center" }}>{props.recipe.name}</Card.Title>

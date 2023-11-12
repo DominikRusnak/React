@@ -32,7 +32,6 @@ function IngredientList() {
       return (
         <>
           <IngredientTableList ingredients={ingredientsLoadCall.data}/>
-          {console.log("cyklimevonku")}
         </>
       );
     } else if (ingredientsLoadCall.state === "error") {
@@ -51,7 +50,6 @@ function IngredientList() {
       );
     }
   }
-  console.log("whyzacyklene")
   return getChild();
     
 }
