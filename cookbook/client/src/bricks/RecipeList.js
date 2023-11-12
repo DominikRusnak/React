@@ -20,12 +20,23 @@ function RecipeList(props) {
     useState({
       state: "pending",
     });
+    const [addRecipeShow, setAddRecipeShow] = useState({ 
+      state: false 
+    }); 
 
-    const handleRecipeAdded = (grade) => {
+    const handleAddRecipeShow = (data) => setAddRecipeShow({ state: true, data });
+
+    const handleRecipeAdded = (recipe) => {
       if (recipeListCall.state === "success") {
+        let recipeList = [ ...recipeListCall.data];
+
+        if (recipe.id) {
+          recipeList = recipeList.filter((r) => r.id !== recipe.id);
+        }
+
         setRecipeListCall({
           state: "success",
-          data: [...recipeListCall.data, grade]
+          data: [...recipeList, recipe]
         });
       }
     }
@@ -50,6 +61,7 @@ function RecipeList(props) {
       if (!event.target.value) setSearchBy("");
     }
 
+    console.log(handleAddRecipeShow)
     return (
         <div>
           <Navbar collapseOnSelect expand="sm" bg="light">
@@ -90,6 +102,9 @@ function RecipeList(props) {
                     </Button>
                     <RecipeForm
                       ingredients={props.ingredients}
+                      show={addRecipeShow.state}
+                      recipe={addRecipeShow.data} 
+                      setAddRecipeShow={setAddRecipeShow}
                       onComplete={(recipe) => handleRecipeAdded(recipe)}
                     />
                 </Form>
@@ -99,20 +114,19 @@ function RecipeList(props) {
           </Navbar>
           <div class="container">
             <div className={"d-block d-md-none"}>
-              <RecipeSimpleList recipeList={filteredRecipeList} ingredients={props.ingredients} />
+              <RecipeSimpleList recipeList={filteredRecipeList} ingredients={props.ingredients} handleAddRecipeShow={handleAddRecipeShow} />
             </div>
             <div className={"d-none d-md-block"}>
               {isGrid ? (
-                <RecipeDetailedList recipeList={filteredRecipeList} ingredients={props.ingredients} />
+                <RecipeDetailedList recipeList={filteredRecipeList} ingredients={props.ingredients} handleAddRecipeShow={handleAddRecipeShow} />
               ) : isTable ? (
-                <RecipeTableList recipeList={filteredRecipeList} ingredients={props.ingredients} />
+                <RecipeTableList recipeList={filteredRecipeList} ingredients={props.ingredients} handleAddRecipeShow={handleAddRecipeShow} />
               ) : (
-                <RecipeSimpleList recipeList={filteredRecipeList} ingredients={props.ingredients} />
+                <RecipeSimpleList recipeList={filteredRecipeList} ingredients={props.ingredients} handleAddRecipeShow={handleAddRecipeShow} />
               )}
             </div>
           </div>
         </div>
-        
       );
 
 }

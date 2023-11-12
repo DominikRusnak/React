@@ -1,15 +1,16 @@
 import Icon from "@mdi/react";
 import Button from "react-bootstrap/Button";
 import { Modal, Image } from 'react-bootstrap';
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { mdiPlus, mdiLoading } from '@mdi/js'
 import Form from "react-bootstrap/Form";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 
-function RecipeForm({ ingredients, onComplete }) {
-    const [isModalShown, setShow] = useState(false);
-  
+function RecipeForm({ ingredients, show, recipe, setAddRecipeShow, onComplete }) {
+
+    const [hasData, setData] = useState(false);
+    const handleSetData = () => setData(true);
     const defaultForm = {
         name: "",
         description: "",
@@ -40,11 +41,26 @@ function RecipeForm({ ingredients, onComplete }) {
         },
     }
 
-    const handleShowModal = () => setShow(true);
+    useEffect(() => {
+        if (recipe) {
+          setFormData({
+            name: recipe.name,
+            description: recipe.description,
+            imgUri: recipe.imgUri,
+            ingredients: recipe.ingredients,
+          });
+          handleSetData()
+        }
+        console.log(recipe);
+      }, [recipe]);
+
+    const handleShowModal = () => setAddRecipeShow({state: true});
     const handleCloseModal = () => {
+        setAddRecipeShow({ state: false });
         setFormData(defaultForm);
-        setShow(false);
+        setData(false);
     };
+
 
     const [validated, setValidated] = useState(false); 
     const [formData, setFormData] = useState(defaultForm);
@@ -95,7 +111,7 @@ function RecipeForm({ ingredients, onComplete }) {
         e.stopPropagation();
     
         const payload = {
-          ...formData,
+          ...formData, id: recipe ? recipe.id : null
         };
 
 
@@ -104,15 +120,15 @@ function RecipeForm({ ingredients, onComplete }) {
             setValidated(true); 
             return; 
         } 
-
-        payload.ingredients.push({id: formIngredients.ingredient_1.ingredientId, amount: formIngredients.ingredient_1.ingredientAmount, unit: formIngredients.ingredient_1.ingredientUnit});
-        payload.ingredients.push({id: formIngredients.ingredient_2.ingredientId, amount: formIngredients.ingredient_2.ingredientAmount, unit: formIngredients.ingredient_2.ingredientUnit});
-        payload.ingredients.push({id: formIngredients.ingredient_3.ingredientId, amount: formIngredients.ingredient_3.ingredientAmount, unit: formIngredients.ingredient_3.ingredientUnit});
-        payload.ingredients.push({id: formIngredients.ingredient_4.ingredientId, amount: formIngredients.ingredient_4.ingredientAmount, unit: formIngredients.ingredient_4.ingredientUnit});
-
+        if (!hasData) {
+            payload.ingredients.push({id: formIngredients.ingredient_1.ingredientId, amount: formIngredients.ingredient_1.ingredientAmount, unit: formIngredients.ingredient_1.ingredientUnit});
+            payload.ingredients.push({id: formIngredients.ingredient_2.ingredientId, amount: formIngredients.ingredient_2.ingredientAmount, unit: formIngredients.ingredient_2.ingredientUnit});
+            payload.ingredients.push({id: formIngredients.ingredient_3.ingredientId, amount: formIngredients.ingredient_3.ingredientAmount, unit: formIngredients.ingredient_3.ingredientUnit});
+            payload.ingredients.push({id: formIngredients.ingredient_4.ingredientId, amount: formIngredients.ingredient_4.ingredientAmount, unit: formIngredients.ingredient_4.ingredientUnit});
+        }
     
         setRecipeAddCall({ state: 'pending' });
-        const res = await fetch(`http://localhost:3000/recipe/create`, {
+        const res = await fetch(`http://localhost:3000/recipe/${recipe ? 'update' : 'create'}`, {
             method: "POST",
             headers: {
             "Content-Type": "application/json",
@@ -134,10 +150,10 @@ function RecipeForm({ ingredients, onComplete }) {
     
     return (
       <>
-        <Modal show={isModalShown} onHide={handleCloseModal}>
+        <Modal show={show} onHide={handleCloseModal}>
             <Form noValidate validated={validated} onSubmit={(e) => handleSubmit(e)}>
                 <Modal.Header closeButton>
-                    <Modal.Title>Přidat recept</Modal.Title>
+                    <Modal.Title>{recipe ? 'Upravit' : 'Přidat'} recept</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                 <Form.Group className="mb-3">
@@ -182,171 +198,173 @@ function RecipeForm({ ingredients, onComplete }) {
                     Zadej obrázek pomocí URL
                     </Form.Control.Feedback>
                 </Form.Group>
-                
-                <Row>
-                    <Form.Group as={Col} className="mb-3">
-                        <Form.Label>Ingredience</Form.Label>
-                            <Form.Select
-                                type="text"
-                                defaultValue="Zvol ingredienci"
-                                onChange={(e) => setIngredientId("ingredient_1", e.target.value)}
+                { hasData ? (<br/>) : (
+                <div>
+                    <Row>
+                        <Form.Group as={Col} className="mb-3">
+                            <Form.Label>Ingredience</Form.Label>
+                                <Form.Select
+                                    type="text"
+                                    defaultValue="Zvol ingredienci"
+                                    onChange={(e) => setIngredientId("ingredient_1", e.target.value)}
+                                    required
+                                >
+                                    
+                                <option>Zvol ingredienci</option>
+                                {ingredients.map((ingredient) => (
+                                    <option key={ingredient.id} value={ingredient.id}>{ingredient.name}</option>
+                                ))}
+                                </Form.Select>
+                        </Form.Group>
+                        <Form.Group as={Col} className="mb-3">
+                            <Form.Label>Počet</Form.Label>
+                            <Form.Control
+                                value={formIngredients.ingredient_1.ingredientAmount}
+                                onChange={(e) => setIngredientAmount("ingredient_1", parseFloat(e.target.value))}
                                 required
-                            >
-                                
-                            <option>Zvol ingredienci</option>
-                            {ingredients.map((ingredient) => (
-                                <option key={ingredient.id} value={ingredient.id}>{ingredient.name}</option>
-                            ))}
-                            </Form.Select>
-                    </Form.Group>
-                    <Form.Group as={Col} className="mb-3">
-                        <Form.Label>Počet</Form.Label>
-                        <Form.Control
-                            value={formIngredients.ingredient_1.ingredientAmount}
-                            onChange={(e) => setIngredientAmount("ingredient_1", parseFloat(e.target.value))}
-                            required
-                        />
-                        <Form.Control.Feedback type="invalid"> 
-                            Zadej množství/hmotnost
-                        </Form.Control.Feedback> 
-                    </Form.Group>
-                    <Form.Group as={Col} className="mb-3">
-                        <Form.Label>Jednotka</Form.Label>
-                        <Form.Control
-                            type="text"
-                            value={formIngredients.ingredient_1.ingredientUnit}
-                            onChange={(e) => setIngredientUnit("ingredient_1", e.target.value)}
-                            required
-                        />
-                        <Form.Control.Feedback type="invalid"> 
-                            Zadej jednotku
-                        </Form.Control.Feedback> 
-                    </Form.Group>
-                </Row>
-                <Row>
-                    <Form.Group as={Col} className="mb-3">
-                        <Form.Label>Ingredience</Form.Label>
-                            <Form.Select
+                            />
+                            <Form.Control.Feedback type="invalid"> 
+                                Zadej množství/hmotnost
+                            </Form.Control.Feedback> 
+                        </Form.Group>
+                        <Form.Group as={Col} className="mb-3">
+                            <Form.Label>Jednotka</Form.Label>
+                            <Form.Control
                                 type="text"
-                                defaultValue="Zvol ingredienci"
-                                onChange={(e) => setIngredientId("ingredient_2", e.target.value)}
+                                value={formIngredients.ingredient_1.ingredientUnit}
+                                onChange={(e) => setIngredientUnit("ingredient_1", e.target.value)}
                                 required
-                            >
-                                
-                            <option defaultValue>Zvol ingredienci</option>
-                            {ingredients.map((ingredient) => (
-                                <option key={ingredient.id} value={ingredient.id}>{ingredient.name}</option>
-                            ))}
-                            </Form.Select>
-                    </Form.Group>
-                    <Form.Group as={Col} className="mb-3">
-                        <Form.Label>Počet</Form.Label>
-                        <Form.Control
-                            type="text"
-                            value={formIngredients.ingredient_2.ingredientAmount}
-                            onChange={(e) => setIngredientAmount("ingredient_2", parseFloat(e.target.value))}
-                            required
-                        />
-                        <Form.Control.Feedback type="invalid"> 
-                            Zadej množství/hmotnost
-                        </Form.Control.Feedback> 
-                    </Form.Group>
-                    <Form.Group as={Col} className="mb-3">
-                        <Form.Label>Jednotka</Form.Label>
-                        <Form.Control
-                            type="text"
-                            value={formIngredients.ingredient_2.ingredientUnit}
-                            onChange={(e) => setIngredientUnit("ingredient_2", e.target.value)}
-                            required
-                        />
-                        <Form.Control.Feedback type="invalid"> 
-                            Zadej jednotku
-                        </Form.Control.Feedback> 
-                    </Form.Group>
-                </Row>
-                <Row>
-                    <Form.Group as={Col} className="mb-3">
-                        <Form.Label>Ingredience</Form.Label>
-                            <Form.Select
+                            />
+                            <Form.Control.Feedback type="invalid"> 
+                                Zadej jednotku
+                            </Form.Control.Feedback> 
+                        </Form.Group>
+                    </Row>
+                    <Row>
+                        <Form.Group as={Col} className="mb-3">
+                            <Form.Label>Ingredience</Form.Label>
+                                <Form.Select
+                                    type="text"
+                                    defaultValue="Zvol ingredienci"
+                                    onChange={(e) => setIngredientId("ingredient_2", e.target.value)}
+                                    required
+                                >
+                                    
+                                <option defaultValue>Zvol ingredienci</option>
+                                {ingredients.map((ingredient) => (
+                                    <option key={ingredient.id} value={ingredient.id}>{ingredient.name}</option>
+                                ))}
+                                </Form.Select>
+                        </Form.Group>
+                        <Form.Group as={Col} className="mb-3">
+                            <Form.Label>Počet</Form.Label>
+                            <Form.Control
                                 type="text"
-                                defaultValue="Zvol ingredienci"
-                                onChange={(e) => setIngredientId("ingredient_3", e.target.value)}
+                                value={formIngredients.ingredient_2.ingredientAmount}
+                                onChange={(e) => setIngredientAmount("ingredient_2", parseFloat(e.target.value))}
                                 required
-                            >
-                                
-                            <option defaultValue>Zvol ingredienci</option>
-                            {ingredients.map((ingredient) => (
-                                <option key={ingredient.id} value={ingredient.id}>{ingredient.name}</option>
-                            ))}
-                            </Form.Select>
-                    </Form.Group>
-                    <Form.Group as={Col} className="mb-3">
-                        <Form.Label>Počet</Form.Label>
-                        <Form.Control
-                            type="text"
-                            value={formIngredients.ingredient_3.ingredientAmount}
-                            onChange={(e) => setIngredientAmount("ingredient_3", parseFloat(e.target.value))}
-                            required
-                        />
-                        <Form.Control.Feedback type="invalid"> 
-                            Zadej množství/hmotnost
-                        </Form.Control.Feedback> 
-                    </Form.Group>
-                    <Form.Group as={Col} className="mb-3">
-                        <Form.Label>Jednotka</Form.Label>
-                        <Form.Control
-                            type="text"
-                            value={formIngredients.ingredient_3.ingredientUnit}
-                            onChange={(e) => setIngredientUnit("ingredient_3", e.target.value)}
-                            required
-                        />
-                        <Form.Control.Feedback type="invalid"> 
-                            Zadej jednotku
-                        </Form.Control.Feedback> 
-                    </Form.Group>
-                </Row>
-                <Row>
-                    <Form.Group as={Col} className="mb-3">
-                        <Form.Label>Ingredience</Form.Label>
-                            <Form.Select
+                            />
+                            <Form.Control.Feedback type="invalid"> 
+                                Zadej množství/hmotnost
+                            </Form.Control.Feedback> 
+                        </Form.Group>
+                        <Form.Group as={Col} className="mb-3">
+                            <Form.Label>Jednotka</Form.Label>
+                            <Form.Control
                                 type="text"
-                                defaultValue="Zvol ingredienci"
-                                onChange={(e) => setIngredientId("ingredient_4", e.target.value)}
+                                value={formIngredients.ingredient_2.ingredientUnit}
+                                onChange={(e) => setIngredientUnit("ingredient_2", e.target.value)}
                                 required
-                            >
-                                
-                            <option defaultValue>Zvol ingredienci</option>
-                            {ingredients.map((ingredient) => (
-                                <option key={ingredient.id} value={ingredient.id}>{ingredient.name}</option>
-                            ))}
-                            </Form.Select>
-                    </Form.Group>
-                    <Form.Group as={Col} className="mb-3">
-                        <Form.Label>Počet</Form.Label>
-                        <Form.Control
-                            type="text"
-                            value={formIngredients.ingredient_4.ingredientAmount}
-                            onChange={(e) => setIngredientAmount("ingredient_4", parseFloat(e.target.value))}
-                            required
-                        />
-                        <Form.Control.Feedback type="invalid"> 
-                            Zadej množství/hmotnost
-                        </Form.Control.Feedback> 
-                    </Form.Group>
-                    <Form.Group as={Col} className="mb-3">
-                        <Form.Label>Jednotka</Form.Label>
-                        <Form.Control
-                            type="text"
-                            value={formIngredients.ingredient_4.ingredientUnit}
-                            onChange={(e) => setIngredientUnit("ingredient_4", e.target.value)}
-                            required
-                        />
-                        <Form.Control.Feedback type="invalid"> 
-                            Zadej jednotku
-                        </Form.Control.Feedback> 
-                    </Form.Group>
-                </Row>
-
+                            />
+                            <Form.Control.Feedback type="invalid"> 
+                                Zadej jednotku
+                            </Form.Control.Feedback> 
+                        </Form.Group>
+                    </Row>
+                    <Row>
+                        <Form.Group as={Col} className="mb-3">
+                            <Form.Label>Ingredience</Form.Label>
+                                <Form.Select
+                                    type="text"
+                                    defaultValue="Zvol ingredienci"
+                                    onChange={(e) => setIngredientId("ingredient_3", e.target.value)}
+                                    required
+                                >
+                                    
+                                <option defaultValue>Zvol ingredienci</option>
+                                {ingredients.map((ingredient) => (
+                                    <option key={ingredient.id} value={ingredient.id}>{ingredient.name}</option>
+                                ))}
+                                </Form.Select>
+                        </Form.Group>
+                        <Form.Group as={Col} className="mb-3">
+                            <Form.Label>Počet</Form.Label>
+                            <Form.Control
+                                type="text"
+                                value={formIngredients.ingredient_3.ingredientAmount}
+                                onChange={(e) => setIngredientAmount("ingredient_3", parseFloat(e.target.value))}
+                                required
+                            />
+                            <Form.Control.Feedback type="invalid"> 
+                                Zadej množství/hmotnost
+                            </Form.Control.Feedback> 
+                        </Form.Group>
+                        <Form.Group as={Col} className="mb-3">
+                            <Form.Label>Jednotka</Form.Label>
+                            <Form.Control
+                                type="text"
+                                value={formIngredients.ingredient_3.ingredientUnit}
+                                onChange={(e) => setIngredientUnit("ingredient_3", e.target.value)}
+                                required
+                            />
+                            <Form.Control.Feedback type="invalid"> 
+                                Zadej jednotku
+                            </Form.Control.Feedback> 
+                        </Form.Group>
+                    </Row>
+                    <Row>
+                        <Form.Group as={Col} className="mb-3">
+                            <Form.Label>Ingredience</Form.Label>
+                                <Form.Select
+                                    type="text"
+                                    defaultValue="Zvol ingredienci"
+                                    onChange={(e) => setIngredientId("ingredient_4", e.target.value)}
+                                    required
+                                >
+                                    
+                                <option defaultValue>Zvol ingredienci</option>
+                                {ingredients.map((ingredient) => (
+                                    <option key={ingredient.id} value={ingredient.id}>{ingredient.name}</option>
+                                ))}
+                                </Form.Select>
+                        </Form.Group>
+                        <Form.Group as={Col} className="mb-3">
+                            <Form.Label>Počet</Form.Label>
+                            <Form.Control
+                                type="text"
+                                value={formIngredients.ingredient_4.ingredientAmount}
+                                onChange={(e) => setIngredientAmount("ingredient_4", parseFloat(e.target.value))}
+                                required
+                            />
+                            <Form.Control.Feedback type="invalid"> 
+                                Zadej množství/hmotnost
+                            </Form.Control.Feedback> 
+                        </Form.Group>
+                        <Form.Group as={Col} className="mb-3">
+                            <Form.Label>Jednotka</Form.Label>
+                            <Form.Control
+                                type="text"
+                                value={formIngredients.ingredient_4.ingredientUnit}
+                                onChange={(e) => setIngredientUnit("ingredient_4", e.target.value)}
+                                required
+                            />
+                            <Form.Control.Feedback type="invalid"> 
+                                Zadej jednotku
+                            </Form.Control.Feedback> 
+                        </Form.Group>
+                    </Row>
+                    </div>
+                    )}
                 </Modal.Body>
                 <Modal.Footer>
                     <div className="d-flex flex-row gap-2">
@@ -362,7 +380,7 @@ function RecipeForm({ ingredients, onComplete }) {
                             { recipeAddCall.state === 'pending' ? (
                                 <Icon size={0.8} path={mdiLoading} spin={true} />
                                 ) : (
-                                "Vytvořit"
+                                recipe ? 'Upravit' : 'Vytvořit'
                             )}
                         </Button>
                     </div>                

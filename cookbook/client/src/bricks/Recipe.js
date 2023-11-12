@@ -1,6 +1,7 @@
 import React from "react";
 import Card from 'react-bootstrap/Card';
-
+import Icon from "@mdi/react";
+import { mdiPencilOutline } from '@mdi/js'
 
 
 function Recipe(props) {
@@ -35,7 +36,17 @@ function Recipe(props) {
     
     return (
         <Card key={props.recipe.id} >
-            <Card.Img variant="top" src={props.recipe.imgUri}  />
+            <div>
+                <Card.Img variant="top" src={props.recipe.imgUri}  />
+            </div>
+            <td> 
+                <Icon 
+                    size={1} 
+                    path={mdiPencilOutline} 
+                    style={{ color: 'green', cursor: 'pointer' }} 
+                    onClick={() => props.handleAddRecipeShow(props.recipe)} 
+                /> 
+            </td> 
             <Card.Body>
                 <Card.Title style={{ textAlign: "center" }}>{props.recipe.name}</Card.Title>
                 {cutString()}

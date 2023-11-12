@@ -7,7 +7,7 @@ function RecipeDetailedList(props) {
             {props.recipeList.map((recipe) => {
                 return( 
                     <div class="col-12 col-sm-6 col-md-4 col-lg-4 col-xl-3" style={{ paddingBottom: "16px" }} >
-                        <Recipe key={recipe.id} recipe={recipe} simple="false" ingredients={props.ingredients} />
+                        <Recipe key={recipe.id} recipe={recipe} simple="false" ingredients={props.ingredients} handleAddRecipeShow={props.handleAddRecipeShow} />
                     </div>
                 );
             })}
